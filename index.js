@@ -4,10 +4,10 @@
 // const {read, write} = require('gherkin-io');
 
 // const {CucumberDocuments} = require('./src/cucumber/cucumber-document');
-const log4js = require("log4js");
+const log4js = require('log4js');
 const logger = log4js.getLogger();
-const {FileUtils} = require("./src/utils/file-utils");
-logger.level = "info";
+const {FileUtils} = require('./src/utils/file-utils');
+logger.level = 'info';
 
 // const cucumberDocument = new CucumberDocuments(
 //     '../src/test/resources/features/messenger/channels.feature',
@@ -40,7 +40,7 @@ logger.level = "info";
 console.log(FileUtils.getFileAbsolutePath(__dirname));
 console.log(FileUtils.getFileDirectoryAbsolutePath(__dirname));
 const tmpFile = FileUtils.createTemporaryFile({
-  postfix: ".json",
+  postfix: '.json',
 });
 console.log(tmpFile.name);
 // tmpFile.removeCallback();

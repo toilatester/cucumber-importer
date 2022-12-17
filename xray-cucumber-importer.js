@@ -1,28 +1,28 @@
-const {read, write} = require("gherkin-io");
-const {Tag} = require("gherkin-ast");
+const {read, write} = require('gherkin-io');
+const {Tag} = require('gherkin-ast');
 // const {format} = require('gherkin-formatter');
-const axios = require("axios");
-const fs = require("fs");
-const tmp = require("tmp");
-const path = require("path");
-const log4js = require("log4js");
+const axios = require('axios');
+const fs = require('fs');
+const tmp = require('tmp');
+const path = require('path');
+const log4js = require('log4js');
 const logger = log4js.getLogger();
-logger.level = "info";
+logger.level = 'info';
 
-const XRAY_CLIENT_ID = process.argv[2] || "NO_XRAY_CLIENT_ID_INPUT";
-const XRAY_CLIENT_SECRET = process.argv[3] || "NO_XRAY_CLIENT_SECRET_INPUT";
+const XRAY_CLIENT_ID = process.argv[2] || 'NO_XRAY_CLIENT_ID_INPUT';
+const XRAY_CLIENT_SECRET = process.argv[3] || 'NO_XRAY_CLIENT_SECRET_INPUT';
 const DEFAULT_TEST_INFO = {
   fields: {
     customfield_10044: [
       {
-        id: "10027",
-        value: "API",
+        id: '10027',
+        value: 'API',
       },
     ],
     customfield_10051: [
       {
-        id: "10046",
-        value: "User Management",
+        id: '10046',
+        value: 'User Management',
       },
     ],
   },
@@ -50,7 +50,7 @@ async function importTest(featureFilePath) {
   );
   logger.error(JSON.stringify(importResultsData.data.errors));
   const keys = importResultsData.data.updatedOrCreatedTests.map(
-    (item) => item["key"],
+    (item) => item['key'],
   );
   const existingTestTags = getExistingTestTags(commitedFeature);
   const newTags = keys.filter((x) => !existingTestTags.includes(x));
@@ -64,7 +64,7 @@ async function importTest(featureFilePath) {
       (scenario) => scenario.name === item,
     );
     if (newTags[index] !== undefined) {
-      scenario.tags.push(new Tag("TEST_" + newTags[index]));
+      scenario.tags.push(new Tag('TEST_' + newTags[index]));
     }
     logger.info(`Add tag TEST_${newTags[index]} to scenario ${item}`);
   });
@@ -74,15 +74,15 @@ async function importTest(featureFilePath) {
 }
 
 function extractDomainTag(tags) {
-  const domainTag = tags.find((tag) => tag.name.includes("Domain"));
-  return domainTag.name.split(":")[1];
+  const domainTag = tags.find((tag) => tag.name.includes('Domain'));
+  return domainTag.name.split(':')[1];
 }
 
 function getExistingTestTags(document) {
   return document.feature.elements.map((item) => {
     if (!item.tags) return item.name;
-    const testIdTag = item.tags.find((tag) => tag.name.includes("TEST_QE"));
-    if (testIdTag !== undefined) return testIdTag.name.split("_")[1];
+    const testIdTag = item.tags.find((tag) => tag.name.includes('TEST_QE'));
+    if (testIdTag !== undefined) return testIdTag.name.split('_')[1];
     return item.name;
   });
 }
@@ -93,15 +93,15 @@ async function importCucumberTestToXray(
   testInfoFilePath,
 ) {
   return await axios.post(
-    "https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=QE",
+    'https://xray.cloud.getxray.app/api/v2/import/feature?projectKey=QE',
     {
       file: fs.createReadStream(featureFilePath),
       testInfo: fs.createReadStream(testInfoFilePath),
     },
     {
       headers: {
-        "Content-Type": "multipart/form-data",
-        "Authorization": xrayToken,
+        'Content-Type': 'multipart/form-data',
+        'Authorization': xrayToken,
       },
     },
   );
@@ -109,14 +109,14 @@ async function importCucumberTestToXray(
 
 async function authenticateXray() {
   const res = await axios.post(
-    "https://xray.cloud.getxray.app/api/v2/authenticate",
+    'https://xray.cloud.getxray.app/api/v2/authenticate',
     {
       client_id: XRAY_CLIENT_ID,
       client_secret: XRAY_CLIENT_SECRET,
     },
     {
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     },
   );
@@ -125,26 +125,26 @@ async function authenticateXray() {
 
 async function createTemporaryFeatureFile(document) {
   const tmpobj = tmp.fileSync({
-    postfix: ".feature",
+    postfix: '.feature',
   });
   const options = {separateStepGroups: false};
-  logger.info("feature file path: ", tmpobj.name);
+  logger.info('feature file path: ', tmpobj.name);
   await write(tmpobj.name, document, options);
   return tmpobj;
 }
 
 async function createTemporaryTestInfoFile(object) {
   const tmpobj = tmp.fileSync({
-    postfix: ".json",
+    postfix: '.json',
   });
-  logger.info("testInfo file path: ", tmpobj.name);
+  logger.info('testInfo file path: ', tmpobj.name);
   fs.writeFileSync(tmpobj.name, JSON.stringify(object));
   return tmpobj;
 }
 
 function buildCustomFields(domain) {
   switch (domain) {
-    case "UM":
+    case 'UM':
     default:
       return DEFAULT_TEST_INFO;
   }
@@ -152,13 +152,13 @@ function buildCustomFields(domain) {
 
 const fileChangedPath = path.resolve(
   `${__dirname}${path.sep}..${path.sep}`,
-  "changed-files.txt",
+  'changed-files.txt',
 );
-const arrayText = fs.readFileSync(fileChangedPath, "utf8").split("\n");
+const arrayText = fs.readFileSync(fileChangedPath, 'utf8').split('\n');
 
 for (const i in arrayText) {
-  const fullFile = `../${arrayText[i].replace(/\r\n/g, "\n").split("\n")}`;
-  if (fullFile.includes(".feature")) {
+  const fullFile = `../${arrayText[i].replace(/\r\n/g, '\n').split('\n')}`;
+  if (fullFile.includes('.feature')) {
     logger.info(`Importing ${fullFile}`);
     importTest(fullFile);
   }
