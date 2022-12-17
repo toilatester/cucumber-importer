@@ -2,8 +2,8 @@ const {
   graphqlCreateFolder,
   graphqlDeleteFolder,
   graphqlAddTestsToFolder,
-} = require("./mutation");
-const {graphqlFolderQuery} = require("./query");
+} = require('./mutation');
+const {graphqlFolderQuery} = require('./query');
 
 module.exports = {
   graphqlCreateFolder,

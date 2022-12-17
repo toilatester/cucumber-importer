@@ -1,4 +1,4 @@
-const {gql} = require("graphql-request");
+const {gql} = require('graphql-request');
 
 const graphqlCreateFolder = gql`
   mutation ($path: String!, $projectId: String!) {

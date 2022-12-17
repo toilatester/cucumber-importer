@@ -1,7 +1,7 @@
-const {read} = require("gherkin-io");
-const log4js = require("log4js");
+const {read} = require('gherkin-io');
+const log4js = require('log4js');
 const logger = log4js.getLogger();
-logger.level = "info";
+logger.level = 'info';
 
 class CucumberDocuments {
   #cucumberDocuments;
@@ -22,9 +22,9 @@ class CucumberDocuments {
 
   extractTagsData() {
     if (!this.#cucumberDocuments) {
-      logger.error("Please load feature file with readFeatureFile method");
+      logger.error('Please load feature file with readFeatureFile method');
       throw new Error(
-        "Cucumber document is empty, please load the document with method readFeatureFile",
+        'Cucumber document is empty, please load the document with method readFeatureFile',
       );
     }
     const tasgData = [];

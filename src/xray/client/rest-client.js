@@ -1,7 +1,7 @@
-const axios = require("axios");
-const log4js = require("log4js");
+const axios = require('axios');
+const log4js = require('log4js');
 const logger = log4js.getLogger();
-logger.level = "info";
+logger.level = 'info';
 
 class XrayRestClient {
   #host;
@@ -18,7 +18,7 @@ class XrayRestClient {
 
   async exchangeAuthorizationToken() {
     if (!this.#authorizationToken) {
-      logger.info("Send Request To Authorization Service");
+      logger.info('Send Request To Authorization Service');
       const res = await axios.post(
         `https://${this.#host}/api/v2/authenticate`,
         {
@@ -27,13 +27,13 @@ class XrayRestClient {
         },
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         },
       );
       this.#authorizationToken = `Bearer ${res.data}`;
     }
-    logger.info("JWT Token", this.#authorizationToken);
+    logger.info('JWT Token', this.#authorizationToken);
   }
 
   async importCucumberTestToXray(
@@ -49,8 +49,8 @@ class XrayRestClient {
       },
       {
         headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": this.#authorizationToken,
+          'Content-Type': 'multipart/form-data',
+          'Authorization': this.#authorizationToken,
         },
       },
     );

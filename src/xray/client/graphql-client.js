@@ -1,15 +1,15 @@
-const {GraphQLClient} = require("graphql-request");
-const Constant = require("../constant");
-const {XrayRestClient} = require("./rest-client");
+const {GraphQLClient} = require('graphql-request');
+const Constant = require('../constant');
+const {XrayRestClient} = require('./rest-client');
 const {
   graphqlCreateFolder,
   graphqlDeleteFolder,
   graphqlFolderQuery,
   graphqlAddTestsToFolder,
-} = require("../grapql");
-const log4js = require("log4js");
+} = require('../grapql');
+const log4js = require('log4js');
 const logger = log4js.getLogger();
-logger.level = "info";
+logger.level = 'info';
 
 class XrayGraphqlClient {
   #host;
@@ -45,7 +45,7 @@ class XrayGraphqlClient {
       path: rootPath,
     };
     const data = await xrayGraphQLClient.request(graphqlFolderQuery, variables);
-    logger.info("GraphQL Data Response", JSON.stringify(data));
+    logger.info('GraphQL Data Response', JSON.stringify(data));
     return data;
   }
 
@@ -67,7 +67,7 @@ class XrayGraphqlClient {
       graphqlCreateFolder,
       variables,
     );
-    logger.info("GraphQL Data Response", JSON.stringify(data));
+    logger.info('GraphQL Data Response', JSON.stringify(data));
     return data;
   }
 
@@ -89,7 +89,7 @@ class XrayGraphqlClient {
       graphqlDeleteFolder,
       variables,
     );
-    logger.info("GraphQL Data Response", JSON.stringify(data));
+    logger.info('GraphQL Data Response', JSON.stringify(data));
     return data;
   }
 
@@ -112,7 +112,7 @@ class XrayGraphqlClient {
       graphqlAddTestsToFolder,
       variables,
     );
-    logger.info("GraphQL Data Response", JSON.stringify(data));
+    logger.info('GraphQL Data Response', JSON.stringify(data));
     return data;
   }
 }

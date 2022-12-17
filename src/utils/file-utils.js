@@ -1,9 +1,9 @@
-const fs = require("fs");
-const tmp = require("tmp");
-const path = require("path");
-const log4js = require("log4js");
+const fs = require('fs');
+const tmp = require('tmp');
+const path = require('path');
+const log4js = require('log4js');
 const logger = log4js.getLogger();
-logger.level = "info";
+logger.level = 'info';
 
 tmp.setGracefulCleanup();
 
@@ -18,12 +18,12 @@ class FileUtils {
 
   static createTemporaryFile(tmpNameOptions = {}) {
     const tmpobj = tmp.fileSync(tmpNameOptions);
-    logger.info("Create Temporary file", tmpobj.name);
+    logger.info('Create Temporary file', tmpobj.name);
     return tmpobj;
   }
 
   static writeDataToFile(filePath, data) {
-    logger.info("file path: ", filePath);
+    logger.info('file path: ', filePath);
     fs.writeFileSync(filePath, data);
   }
 

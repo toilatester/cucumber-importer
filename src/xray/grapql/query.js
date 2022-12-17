@@ -1,4 +1,4 @@
-const {gql} = require("graphql-request");
+const {gql} = require('graphql-request');
 
 const graphqlFolderQuery = gql`
   query ($path: String!, $projectId: String!) {
