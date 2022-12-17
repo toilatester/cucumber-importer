@@ -4,9 +4,10 @@
 // const {read, write} = require('gherkin-io');
 
 // const {CucumberDocuments} = require('./src/cucumber/cucumber-document');
+const {IMPORTER_TYPE} = require('./src/importer/importer');
 const log4js = require('log4js');
 const logger = log4js.getLogger();
-const {FileUtils} = require('./src/utils/file-utils');
+// const { FileUtils } = require('./src/utils/file-utils');
 logger.level = 'info';
 
 // const cucumberDocument = new CucumberDocuments(
@@ -37,10 +38,12 @@ logger.level = 'info';
 //     return tmpobj;
 // })
 
-console.log(FileUtils.getFileAbsolutePath(__dirname));
-console.log(FileUtils.getFileDirectoryAbsolutePath(__dirname));
-const tmpFile = FileUtils.createTemporaryFile({
-  postfix: '.json',
-});
-console.log(tmpFile.name);
+// console.log(FileUtils.getFileAbsolutePath(__dirname));
+// console.log(FileUtils.getFileDirectoryAbsolutePath(__dirname));
+// const tmpFile = FileUtils.createTemporaryFile({
+//   postfix: '.json',
+// });
+// console.log(tmpFile.name);
 // tmpFile.removeCallback();
+
+new IMPORTER_TYPE.XRAY_CLOUD().importCucumberToTestManagement();
