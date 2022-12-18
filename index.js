@@ -46,4 +46,6 @@ logger.level = 'info';
 // console.log(tmpFile.name);
 // tmpFile.removeCallback();
 
-new IMPORTER_TYPE.XRAY_CLOUD().importCucumberToTestManagement();
+new IMPORTER_TYPE.XRAY_CLOUD(
+  '/Users/minhhoang/Workspace/automation/cucumber-importer/changed-files.txt',
+).importCucumberToTestManagement();

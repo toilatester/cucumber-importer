@@ -8,6 +8,10 @@ logger.level = 'info';
 tmp.setGracefulCleanup();
 
 class FileUtils {
+  static readFileContent(filePath) {
+    return fs.readFileSync(filePath, 'utf8');
+  }
+
   static isFileExist(path) {
     return fs.existsSync(path);
   }

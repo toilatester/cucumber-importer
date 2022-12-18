@@ -1,11 +1,48 @@
+const {FileUtils} = require('../utils/file-utils');
+const {Importer} = require('../importer/cucumber-importer');
+const {read} = require('gherkin-io');
 const log4js = require('log4js');
 const logger = log4js.getLogger();
-const {Importer} = require('../importer/cucumber-importer');
 logger.level = 'info';
 
 class XrayCucumberImporter extends Importer {
-  importCucumberToTestManagement() {
-    console.log('Import method from XrayCucumberImporter', this);
+  #importFeatureListContent;
+  #fileChangedPath;
+  #featureFilesPath;
+
+  constructor(fileChangedPath) {
+    super();
+    this.#fileChangedPath = FileUtils.getFileAbsolutePath(fileChangedPath);
+  }
+
+  async importCucumberToTestManagement() {
+    this.#importFeatureListContent = this.#getImportFeatureListContent(
+      this.#fileChangedPath,
+    );
+    this.#featureFilesPath = this.#getFeatureFilesPath(
+      this.#importFeatureListContent,
+    );
+    await this.#importTest();
+  }
+
+  #getImportFeatureListContent(path) {
+    const featureFiles = FileUtils.readFileContent(path).split(/\r?\n/);
+    return featureFiles.filter((file) => file.length > 0);
+  }
+
+  #getFeatureFilesPath(fileChangedContent) {
+    const featureFilesPath = [];
+    for (const featurePath of fileChangedContent) {
+      featureFilesPath.push(FileUtils.getFileAbsolutePath(featurePath));
+    }
+    return featureFilesPath;
+  }
+
+  async #importTest() {
+    for (const featureFilePath of this.#featureFilesPath) {
+      const featureDocument = await read(featureFilePath);
+      console.log(featureDocument);
+    }
   }
 }
 
