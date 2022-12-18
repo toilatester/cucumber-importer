@@ -39,13 +39,28 @@ class XrayCucumberImporter extends Importer {
   }
 
   async #importTest() {
+    const tempFeatureFilesPath =
+      await this.#createTemporaryFeatureFileWithExtraTags();
+    logger.info(
+      'List temp features file for uploading to XRay',
+      tempFeatureFilesPath,
+    );
+  }
+
+  async #createTemporaryFeatureFileWithExtraTags() {
+    const tempFeatureFilesPath = [];
     for (const featureFilePath of this.#featureFilesPath) {
       const cucumberDocument = await this.#loadCucumberDocuemnt(
         featureFilePath,
       );
-      const featureTagsData = cucumberDocument.extractTagsData();
-      cucumberDocument.appendTagsToScenarios(featureTagsData);
+      cucumberDocument.appendTagsToScenarios(
+        cucumberDocument.getFeatureTagsData(),
+      );
+      tempFeatureFilesPath.push(
+        ...(await cucumberDocument.dumpCucumberDocumentToFeatureFile()),
+      );
     }
+    return tempFeatureFilesPath;
   }
 
   async #loadCucumberDocuemnt(featureFilePath) {
