@@ -1,6 +1,6 @@
 const {FileUtils} = require('../utils/file-utils');
 const {Importer} = require('../importer/cucumber-importer');
-const {read} = require('gherkin-io');
+const {CucumberDocuments} = require('../cucumber/cucumber-document');
 const log4js = require('log4js');
 const logger = log4js.getLogger();
 logger.level = 'info';
@@ -40,9 +40,18 @@ class XrayCucumberImporter extends Importer {
 
   async #importTest() {
     for (const featureFilePath of this.#featureFilesPath) {
-      const featureDocument = await read(featureFilePath);
-      console.log(featureDocument);
+      const cucumberDocument = await this.#loadCucumberDocuemnt(
+        featureFilePath,
+      );
+      const featureTagsData = cucumberDocument.extractTagsData();
+      cucumberDocument.appendTagsToScenarios(featureTagsData);
     }
+  }
+
+  async #loadCucumberDocuemnt(featureFilePath) {
+    const cucumberDocument = new CucumberDocuments(featureFilePath);
+    await cucumberDocument.loadFeatureFile();
+    return cucumberDocument;
   }
 }
 

@@ -76,6 +76,20 @@ class CucumberDocuments {
     }
   }
 
+  printFeatureTags() {
+    this.#cucumberFeatures.forEach((feature) =>
+      feature.tags.forEach((tag) => logger.info('feature tag', tag.name)),
+    );
+  }
+
+  printScenarioTags() {
+    this.#cucumberScenarios.forEach((scenario) => {
+      if (scenario.tags) {
+        scenario.tags.forEach((tag) => logger.info('scenario tag', tag.name));
+      }
+    });
+  }
+
   getTagsData() {
     return this.#cucumberTags;
   }
