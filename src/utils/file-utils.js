@@ -2,7 +2,7 @@ const fs = require('fs');
 const tmp = require('tmp');
 const path = require('path');
 const log4js = require('log4js');
-const logger = log4js.getLogger();
+const logger = log4js.getLogger('file-utils');
 logger.level = 'info';
 
 tmp.setGracefulCleanup();

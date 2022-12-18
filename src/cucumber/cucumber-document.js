@@ -1,7 +1,7 @@
 const {read, write} = require('gherkin-io');
 const {FileUtils} = require('../utils/file-utils');
 const log4js = require('log4js');
-const logger = log4js.getLogger();
+const logger = log4js.getLogger('cucumber-document');
 logger.level = 'info';
 
 class CucumberDocuments {

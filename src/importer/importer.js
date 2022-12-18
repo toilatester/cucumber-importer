@@ -1,4 +1,4 @@
-const {XrayCucumberImporter} = require('../xray/cucumber-importer');
+const {XrayCucumberImporter} = require('./xray/cucumber-importer');
 
 const IMPORTER_TYPE = {
   XRAY_CLOUD: XrayCucumberImporter,

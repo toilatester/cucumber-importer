@@ -6,7 +6,7 @@
 // const {CucumberDocuments} = require('./src/cucumber/cucumber-document');
 const {IMPORTER_TYPE} = require('./src/importer/importer');
 const log4js = require('log4js');
-const logger = log4js.getLogger();
+const logger = log4js.getLogger('main');
 // const { FileUtils } = require('./src/utils/file-utils');
 logger.level = 'info';
 
@@ -48,4 +48,5 @@ logger.level = 'info';
 
 new IMPORTER_TYPE.XRAY_CLOUD(
   '/Users/minhhoang/Workspace/automation/cucumber-importer/changed-files.txt',
+  './test-info.json',
 ).importCucumberToTestManagement();
