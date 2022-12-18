@@ -8,6 +8,10 @@ logger.level = 'info';
 tmp.setGracefulCleanup();
 
 class FileUtils {
+  static isFileExist(path) {
+    return fs.existsSync(path);
+  }
+
   static getFileAbsolutePath(fileDir) {
     return path.resolve(fileDir);
   }
