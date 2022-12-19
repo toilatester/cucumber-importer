@@ -106,3 +106,5 @@ dist
 debug
 changed-files.txt
 test-info.json
+jira.js
+testmanagement.config.yaml

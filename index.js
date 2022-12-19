@@ -48,5 +48,5 @@ logger.level = 'info';
 
 new IMPORTER_TYPE.XRAY_CLOUD(
   '/Users/minhhoang/Workspace/automation/cucumber-importer/changed-files.txt',
-  './test-info.json',
+  './testmanagement.config.yaml',
 ).importCucumberToTestManagement();

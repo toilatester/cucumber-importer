@@ -8,7 +8,7 @@ const {
   graphqlAddTestsToFolder,
 } = require('../grapql');
 const log4js = require('log4js');
-const logger = log4js.getLogger();
+const logger = log4js.getLogger('xray-graphql-client');
 logger.level = 'info';
 
 class XrayGraphqlClient {

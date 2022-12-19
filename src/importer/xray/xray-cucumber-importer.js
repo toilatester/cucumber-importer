@@ -1,7 +1,6 @@
 const {FileUtils} = require('../../utils/file-utils');
 const {Importer} = require('../cucumber-importer');
 const {CucumberDocuments} = require('../../cucumber/cucumber-document');
-const {TestInfoFieldsMapper} = require('./testinfo/test-info-fields-mapper');
 const log4js = require('log4js');
 const logger = log4js.getLogger('cucumber-importer');
 logger.level = 'info';
@@ -9,7 +8,7 @@ logger.level = 'info';
 class XrayCucumberImporter extends Importer {
   #importFeatureListContent;
   #cucumberListFilesPath;
-  #testManagementFieldMapper;
+  #testManagementFieldMapperConfigPath;
   #featureFilesPath;
 
   constructor(cucumberListFilesPath, testManagementFieldMapperConfigPath) {
@@ -17,19 +16,19 @@ class XrayCucumberImporter extends Importer {
     this.#cucumberListFilesPath = FileUtils.getFileAbsolutePath(
       cucumberListFilesPath,
     );
-    this.testManagementFieldMapper = new TestInfoFieldsMapper(
+    this.testManagementFieldMapperConfigPath = FileUtils.getFileAbsolutePath(
       testManagementFieldMapperConfigPath,
     );
   }
 
-  async importCucumberToTestManagement() {
+  async importCucumberToTestManagement(testManagementType) {
     this.#importFeatureListContent = this.#getImportFeatureListContent(
       this.#cucumberListFilesPath,
     );
     this.#featureFilesPath = this.#getFeatureFilesPath(
       this.#importFeatureListContent,
     );
-    await this.#importTest();
+    await this.#importTest(testManagementType);
   }
 
   #getImportFeatureListContent(path) {
@@ -45,7 +44,7 @@ class XrayCucumberImporter extends Importer {
     return featureFilesPath;
   }
 
-  async #importTest() {
+  async #importTest(testManagementType) {
     const tempFeatureFilesPath =
       await this.#createTemporaryFeatureFileWithExtraTags();
     logger.info(
