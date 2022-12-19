@@ -1,4 +1,4 @@
-const {TestInfoFieldsMapper} = require('./test-info-fields-mapper-jira');
+const {TestInfoFieldsMapper} = require('./test-info-jira-mapper');
 
 const TEST_INFO_MAPPER_TYPE = {
   JIRA: TestInfoFieldsMapper,

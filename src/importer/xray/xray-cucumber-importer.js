@@ -6,6 +6,7 @@ const logger = log4js.getLogger('cucumber-importer');
 logger.level = 'info';
 
 class XrayCucumberImporter extends Importer {
+  #cucumberDocument;
   #importFeatureListContent;
   #cucumberListFilesPath;
   #testManagementFieldMapperConfigPath;
@@ -16,19 +17,19 @@ class XrayCucumberImporter extends Importer {
     this.#cucumberListFilesPath = FileUtils.getFileAbsolutePath(
       cucumberListFilesPath,
     );
-    this.testManagementFieldMapperConfigPath = FileUtils.getFileAbsolutePath(
+    this.#testManagementFieldMapperConfigPath = FileUtils.getFileAbsolutePath(
       testManagementFieldMapperConfigPath,
     );
   }
 
-  async importCucumberToTestManagement(testManagementType) {
+  async importCucumberToTestManagement(testManagementFieldMapperType) {
     this.#importFeatureListContent = this.#getImportFeatureListContent(
       this.#cucumberListFilesPath,
     );
     this.#featureFilesPath = this.#getFeatureFilesPath(
       this.#importFeatureListContent,
     );
-    await this.#importTest(testManagementType);
+    await this.#importTest(testManagementFieldMapperType);
   }
 
   #getImportFeatureListContent(path) {
@@ -44,19 +45,26 @@ class XrayCucumberImporter extends Importer {
     return featureFilesPath;
   }
 
-  async #importTest(testManagementType) {
+  async #importTest(testManagementFieldMapperType) {
+    const testManagementFieldMapper = Reflect.construct(
+      testManagementFieldMapperType,
+      [this.#testManagementFieldMapperConfigPath],
+    );
     const tempFeatureFilesPath =
       await this.#createTemporaryFeatureFileWithExtraTags();
     logger.info(
       'List temp features file for uploading to XRay',
       tempFeatureFilesPath,
     );
+    testManagementFieldMapper.createTestInfoTemporaryFile(
+      this.#cucumberDocument.getFeatureTags(),
+    );
   }
 
   async #createTemporaryFeatureFileWithExtraTags() {
     const tempFeatureFilesPath = [];
     for (const featureFilePath of this.#featureFilesPath) {
-      const cucumberDocument = await this.#loadCucumberDocuemnt(
+      const cucumberDocument = await this.#loadCucumberDocument(
         featureFilePath,
       );
       cucumberDocument.appendTagsToScenarios(
@@ -69,10 +77,10 @@ class XrayCucumberImporter extends Importer {
     return tempFeatureFilesPath;
   }
 
-  async #loadCucumberDocuemnt(featureFilePath) {
-    const cucumberDocument = new CucumberDocuments(featureFilePath);
-    await cucumberDocument.loadFeatureFile();
-    return cucumberDocument;
+  async #loadCucumberDocument(featureFilePath) {
+    this.#cucumberDocument = new CucumberDocuments(featureFilePath);
+    await this.#cucumberDocument.loadFeatureFile();
+    return this.#cucumberDocument;
   }
 }
 

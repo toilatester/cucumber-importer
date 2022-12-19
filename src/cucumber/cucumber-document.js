@@ -113,6 +113,23 @@ class CucumberDocuments {
     });
   }
 
+  getFeatureTags() {
+    const tags = [];
+    this.#cucumberFeatures.forEach((feature) =>
+      feature.tags.forEach((tag) => tags.push(tag.name)),
+    );
+    return tags;
+  }
+
+  getScenarioTags() {
+    const tags = [];
+    this.#cucumberScenarios.forEach((scenario) => {
+      if (scenario.tags) {
+        scenario.tags.forEach((tag) => tags.push(tag.name));
+      }
+    });
+  }
+
   getFeatureTagsData() {
     return this.#cucumberFeatureTags;
   }
