@@ -1,6 +1,7 @@
 const {FileUtils} = require('../../utils/file-utils');
 const {Importer} = require('../cucumber-importer');
 const {CucumberDocuments} = require('../../cucumber/cucumber-document');
+const {XRayClient} = require('./client');
 const log4js = require('log4js');
 const logger = log4js.getLogger('cucumber-importer');
 logger.level = 'info';
@@ -10,9 +11,15 @@ class XrayCucumberImporter extends Importer {
   #importFeatureListContent;
   #cucumberListFilesPath;
   #testManagementFieldMapperConfigPath;
+  #testManagementFieldMapper;
   #featureFilesPath;
+  #xrayClient;
 
-  constructor(cucumberListFilesPath, testManagementFieldMapperConfigPath) {
+  constructor(
+    cucumberListFilesPath,
+    testManagementFieldMapperConfigPath,
+    clientConfig = {host, clientId, clientSecret, projectId},
+  ) {
     super();
     this.#cucumberListFilesPath = FileUtils.getFileAbsolutePath(
       cucumberListFilesPath,
@@ -20,16 +27,20 @@ class XrayCucumberImporter extends Importer {
     this.#testManagementFieldMapperConfigPath = FileUtils.getFileAbsolutePath(
       testManagementFieldMapperConfigPath,
     );
+    this.#xrayClient = new XRayClient(clientConfig);
   }
 
-  async importCucumberToTestManagement(testManagementFieldMapperType) {
+  async importCucumberToTestManagement(
+    testManagementFieldMapperType,
+    testManagementType,
+  ) {
     this.#importFeatureListContent = this.#getImportFeatureListContent(
       this.#cucumberListFilesPath,
     );
     this.#featureFilesPath = this.#getFeatureFilesPath(
       this.#importFeatureListContent,
     );
-    await this.#importTest(testManagementFieldMapperType);
+    await this.#importTest(testManagementFieldMapperType, testManagementType);
   }
 
   #getImportFeatureListContent(path) {
@@ -45,20 +56,18 @@ class XrayCucumberImporter extends Importer {
     return featureFilesPath;
   }
 
-  async #importTest(testManagementFieldMapperType) {
-    const testManagementFieldMapper = Reflect.construct(
-      testManagementFieldMapperType,
-      [this.#testManagementFieldMapperConfigPath],
-    );
+  async #importTest(testManagementFieldMapperType, testManagementType) {
     const tempFeatureFilesPath =
       await this.#createTemporaryFeatureFileWithExtraTags();
     logger.info(
       'List temp features file for uploading to XRay',
       tempFeatureFilesPath,
     );
-    testManagementFieldMapper.createTestInfoTemporaryFile(
-      this.#cucumberDocument.getFeatureTags(),
+    const tempTestInfoFilePath = await this.#createTemporaryTestInfoFile(
+      testManagementFieldMapperType,
     );
+    console.log(tempTestInfoFilePath);
+    await this.#createXrayTestRepositoryFolder(testManagementType);
   }
 
   async #createTemporaryFeatureFileWithExtraTags() {
@@ -81,6 +90,27 @@ class XrayCucumberImporter extends Importer {
     this.#cucumberDocument = new CucumberDocuments(featureFilePath);
     await this.#cucumberDocument.loadFeatureFile();
     return this.#cucumberDocument;
+  }
+
+  async #createTemporaryTestInfoFile(testManagementFieldMapperType) {
+    this.#testManagementFieldMapper = Reflect.construct(
+      testManagementFieldMapperType,
+      [this.#testManagementFieldMapperConfigPath],
+    );
+    return this.#testManagementFieldMapper.createTestInfoTemporaryFile(
+      this.#cucumberDocument.getFeatureTags(),
+    ).name;
+  }
+
+  async #createXrayTestRepositoryFolder() {
+    console.log(this.#testManagementFieldMapper.getTestInfoStructureConfig());
+    if (
+      !this.#testManagementFieldMapper.getTestInfoStructureConfig().generate
+    ) {
+      return;
+    }
+    const folders = await this.#xrayClient.getTestFolders('/');
+    console.log(JSON.stringify(folders));
   }
 }
 

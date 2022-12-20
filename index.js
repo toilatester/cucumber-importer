@@ -4,9 +4,11 @@
 // const {read, write} = require('gherkin-io');
 
 // const {CucumberDocuments} = require('./src/cucumber/cucumber-document');
-const {IMPORTER_TYPE} = require('./src/importer/importer');
+const {IMPORTER_TYPE} = require('./src/importer');
 const log4js = require('log4js');
 const logger = log4js.getLogger('main');
+const {TEST_INFO_MAPPER_TYPE} = require('./src/importer/testinfo');
+// const {TEST_MANAGEMENT_TYPE} = require('./src/test-management');
 // const { FileUtils } = require('./src/utils/file-utils');
 logger.level = 'info';
 
@@ -45,8 +47,15 @@ logger.level = 'info';
 // });
 // console.log(tmpFile.name);
 // tmpFile.removeCallback();
-
+require('dotenv').config();
+console.log(process.env);
 new IMPORTER_TYPE.XRAY_CLOUD(
   '/Users/minhhoang/Workspace/automation/cucumber-importer/changed-files.txt',
   './testmanagement.config.yaml',
-).importCucumberToTestManagement();
+  {
+    host: 'xray.cloud.getxray.app',
+    clientId: process.env.XRAY_CLIENT_ID,
+    clientSecret: process.env.XRAY_CLIENT_SECRET,
+    projectId: process.env.XRAY_PROJECT_ID,
+  },
+).importCucumberToTestManagement(TEST_INFO_MAPPER_TYPE.JIRA);

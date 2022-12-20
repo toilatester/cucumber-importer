@@ -11,7 +11,8 @@ class JiraRestClient {
   #jiraHost;
   #jiraClient;
 
-  constructor(host, username, token) {
+  constructor(config = {host, username, token}) {
+    const {host, username, token} = config;
     this.#jiraHost = host;
     this.#jiraRestClientUserName = username;
     this.#jiraRestClientToken = token;

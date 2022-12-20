@@ -1,5 +1,5 @@
 const {GraphQLClient} = require('graphql-request');
-const Constant = require('../../utils/constant');
+const Constant = require('../../../utils/constant');
 const {XrayRestClient} = require('./rest-client');
 const {
   graphqlCreateFolder,

@@ -7,13 +7,11 @@ class XrayRestClient {
   #host;
   #clientId;
   #clientSecret;
-  #projectId;
   #authorizationToken;
-  constructor(host, clientId, clientSecret, projectId) {
+  constructor(host, clientId, clientSecret) {
     this.#host = host;
     this.#clientId = clientId;
     this.#clientSecret = clientSecret;
-    this.#projectId = projectId;
   }
 
   async exchangeAuthorizationToken() {
