@@ -112,7 +112,11 @@ class XrayCucumberImporter extends Importer {
     const folderData = [folders.getFolder.path];
     this.#extractXrayFolders(folderData, folders.getFolder);
     const folderTarget = this.#buildFolderStructureWithConfig();
-    console.log(folderData, folderTarget);
+    if (!folderData.includes(folderTarget)) {
+      console.log(folderData, folderTarget);
+      const response = await this.#xrayClient.createTestFolder(folderTarget);
+      console.log(response);
+    }
   }
 
   async #import(tempFeatureFilesPath, tempTestInfoFilePath) {
@@ -138,7 +142,6 @@ class XrayCucumberImporter extends Importer {
     const dynamicFolderValue = featureTags.filter((tag) =>
       dynamicFolderPath.includes(tag.split(':')[0]),
     );
-    console.log(dynamicFolderPath, dynamicFolderValue);
     const folderPath = [''];
     for (const dynamicKey of dynamicFolderPath) {
       const folderValue = dynamicFolderValue.filter((value) =>
