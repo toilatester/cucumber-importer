@@ -66,8 +66,8 @@ class XrayCucumberImporter extends Importer {
     const tempTestInfoFilePath = await this.#createTemporaryTestInfoFile(
       testManagementFieldMapperType,
     );
-    console.log(tempTestInfoFilePath);
     await this.#createXrayTestRepositoryFolder(testManagementType);
+    await this.#import(tempFeatureFilesPath, tempTestInfoFilePath);
   }
 
   async #createTemporaryFeatureFileWithExtraTags() {
@@ -103,14 +103,50 @@ class XrayCucumberImporter extends Importer {
   }
 
   async #createXrayTestRepositoryFolder() {
-    console.log(this.#testManagementFieldMapper.getTestInfoStructureConfig());
     if (
       !this.#testManagementFieldMapper.getTestInfoStructureConfig().generate
     ) {
       return;
     }
     const folders = await this.#xrayClient.getTestFolders('/');
-    console.log(JSON.stringify(folders));
+    const folderData = [folders.getFolder.path];
+    this.#extractXrayFolders(folderData, folders.getFolder);
+    this.#buildFolderStructureWithConfig();
+  }
+
+  async #import(tempFeatureFilesPath, tempTestInfoFilePath) {
+    console.log(tempFeatureFilesPath, tempTestInfoFilePath);
+  }
+
+  #extractXrayFolders(folderData, folders) {
+    if (!folders) return folderData;
+    if (Object.keys(folders).includes('folders')) {
+      for (const subFolder of folders.folders) {
+        folderData.push(subFolder.path);
+        this.#extractXrayFolders(folderData, subFolder);
+      }
+    }
+  }
+  #buildFolderStructureWithConfig() {
+    const dynamicFolderPath = [];
+    const featureTags = this.#cucumberDocument.getFeatureTags();
+    const structure =
+      this.#testManagementFieldMapper.getTestInfoStructureConfig().structure;
+    this.#extractDynamicFolderWithConfig(dynamicFolderPath, structure);
+    const dynamicFolderValue = featureTags.filter((tag) =>
+      dynamicFolderPath.includes(tag.split(':')[0]),
+    );
+    console.log(dynamicFolderValue);
+  }
+  #extractDynamicFolderWithConfig(dynamicFolderPath, structure) {
+    if (!structure) return dynamicFolderPath;
+    if (Object.keys(structure).includes('dynamicKey')) {
+      dynamicFolderPath.push(structure.dynamicKey);
+      this.#extractDynamicFolderWithConfig(
+        dynamicFolderPath,
+        structure.structure,
+      );
+    }
   }
 }
 
