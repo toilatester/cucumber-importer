@@ -1,4 +1,5 @@
 const {parse} = require('yaml');
+const {TEST_MANAGEMENT_TYPE} = require('../../test-management');
 const {FileUtils} = require('../../utils/file-utils');
 const fs = require('fs');
 const log4js = require('log4js');
@@ -8,8 +9,14 @@ logger.level = 'info';
 class TestInfoFieldsMapper {
   #customFieldsMapperConfigPath;
   #testInfoConfig;
+  #jiraClient;
 
   constructor(customFieldMapperPath) {
+    this.#jiraClient = new TEST_MANAGEMENT_TYPE.JIRA_CLOUD({
+      host: process.env.JIRA_HOST,
+      username: process.env.JIRA_USERNAME,
+      token: process.env.JIRA_TOKEN,
+    });
     this.#customFieldsMapperConfigPath = customFieldMapperPath
       ? FileUtils.getFileAbsolutePath(customFieldMapperPath)
       : false;
@@ -34,8 +41,8 @@ class TestInfoFieldsMapper {
     return {};
   }
 
-  createTestInfoTemporaryFile(tags) {
-    const testInfoObject = this.#createTestInfoObject(tags);
+  async createTestInfoTemporaryFile(tags) {
+    const testInfoObject = await this.#createTestInfoObject(tags);
     const tmpobj = FileUtils.createTemporaryFile({
       postfix: '.json',
     });
@@ -45,7 +52,7 @@ class TestInfoFieldsMapper {
     return tmpobj;
   }
 
-  #createTestInfoObject(tags) {
+  async #createTestInfoObject(tags) {
     const testInfoObject = {
       fields: {},
     };
@@ -53,12 +60,61 @@ class TestInfoFieldsMapper {
       return testInfoObject;
     }
     for (const field of this.getTestInfoFieldsConfig()) {
-      testInfoObject.fields[`${field.fieldKey}`] = [
-        {
-          id: field.optionId,
-          value: this.#getOptionValueByDynamicData(tags, field),
-        },
-      ];
+      if (field.optionType === ' single') {
+        if (field.optionDynamic) {
+          const customFieldValue = this.#getOptionValueByDynamicData(
+            tags,
+            field,
+          );
+          const fieldOptionId = await this.#getCustomFieldOptionId(
+            field.fieldKey,
+            customFieldValue,
+          );
+          testInfoObject.fields[`${field.fieldKey}`] = {
+            id: fieldOptionId,
+            value: customFieldValue,
+          };
+        } else {
+          const fieldOptionId = await this.#getCustomFieldOptionId(
+            field.fieldKey,
+            field.optionValue,
+          );
+          testInfoObject.fields[`${field.fieldKey}`] = {
+            id: fieldOptionId,
+            value: field.optionValue,
+          };
+        }
+      } else if (field.optionType === ' multiple') {
+        const fields = [];
+        if (field.optionDynamic) {
+          for (const tagValueForExtracting of field.tagValueForExtractingOptionValue) {
+            const customFieldValue = this.#getOptionValueByTags(
+              tags,
+              tagValueForExtracting,
+            );
+            const fieldOptionId = await this.#getCustomFieldOptionId(
+              field.fieldKey,
+              customFieldValue,
+            );
+            fields.push({
+              id: fieldOptionId,
+              value: customFieldValue,
+            });
+          }
+          testInfoObject.fields[`${field.fieldKey}`] = fields;
+        } else {
+          const fieldOptionId = await this.#getCustomFieldOptionId(
+            field.fieldKey,
+            field.optionValue,
+          );
+          testInfoObject.fields[`${field.fieldKey}`] = [
+            {
+              id: fieldOptionId,
+              value: field.optionValue,
+            },
+          ];
+        }
+      }
     }
     return testInfoObject;
   }
@@ -97,6 +153,28 @@ class TestInfoFieldsMapper {
     } else {
       this.#testInfoConfig = {};
     }
+  }
+
+  async #getCustomFieldOptionId(fieldId, optionValue) {
+    const fieldContextResponse = await this.#jiraClient.getFieldContextValue(
+      fieldId,
+    );
+    const fieldOptionsResponse =
+      await this.#jiraClient.getFieldContextOptionValues(
+        fieldId,
+        fieldContextResponse.values[0]['id'],
+      );
+    const filterOptionIds = fieldOptionsResponse.values.filter((fieldOption) =>
+      fieldOption.value.includes(optionValue),
+    );
+    if (filterOptionIds.length === 0) {
+      throw new Error(
+        `Cannot find option value id for option ${optionValue} in ${JSON.stringify(
+          fieldOptionsResponse.values,
+        )}`,
+      );
+    }
+    return filterOptionIds[0]['id'];
   }
 }
 

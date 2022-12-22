@@ -17,7 +17,6 @@ class XrayRestClient {
 
   async exchangeAuthorizationToken() {
     if (!this.#authorizationToken) {
-      logger.info('Send Request To Authorization Service');
       const res = await axios.post(
         `https://${this.#host}/api/v2/authenticate`,
         {
@@ -25,6 +24,7 @@ class XrayRestClient {
           client_secret: this.#clientSecret,
         },
         {
+          validateStatus: (status) => status >= 200 && status < 500,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -32,7 +32,6 @@ class XrayRestClient {
       );
       this.#authorizationToken = `Bearer ${res.data}`;
     }
-    logger.info('JWT Token', this.#authorizationToken);
   }
 
   async importCucumberTestToXray(projectId, featureFilePath, testInfoFilePath) {
@@ -44,6 +43,7 @@ class XrayRestClient {
         testInfo: fs.createReadStream(testInfoFilePath),
       },
       {
+        validateStatus: (status) => status >= 200 && status < 500,
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': this.#authorizationToken,

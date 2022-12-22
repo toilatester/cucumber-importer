@@ -62,13 +62,28 @@ class XrayCucumberImporter extends Importer {
       'List temp features file for uploading to XRay',
       tempFeatureFilesPath,
     );
-    const tempTestInfoFilePath = await this.#createTemporaryTestInfoFile(
-      testManagementFieldMapperType,
-    );
-    const xrayFolder = await this.#createXrayTestRepositoryFolder(
-      testManagementType,
-    );
-    await this.#import(tempFeatureFilesPath, tempTestInfoFilePath, xrayFolder);
+    for (const featureFilePath of tempFeatureFilesPath) {
+      const featureFileCucumber = new CucumberDocuments(featureFilePath);
+      await featureFileCucumber.loadFeatureFile();
+      const tags = featureFileCucumber.getFeatureTags();
+      const tempTestInfoFilePath = await this.#createTemporaryTestInfoFile(
+        testManagementFieldMapperType,
+        tags,
+      );
+      const xrayFolder = await this.#createXrayTestRepositoryFolder(tags);
+      const result = await this.#import(featureFilePath, tempTestInfoFilePath);
+      if (result.errors.length > 0) {
+        logger.error(
+          'Error in import feature file with error: ',
+          result.errors,
+          `\n\r[Feature file content] \r\n${featureFileCucumber.getFeatureContent()}`,
+        );
+      }
+      this.#xrayClient.addTestsToFolder(
+        xrayFolder,
+        result.updatedOrCreatedTests.map((test) => test.id),
+      );
+    }
   }
 
   async #createTemporaryFeatureFileWithExtraTags() {
@@ -93,42 +108,38 @@ class XrayCucumberImporter extends Importer {
     return this.#cucumberDocument;
   }
 
-  async #createTemporaryTestInfoFile(testManagementFieldMapperType) {
+  async #createTemporaryTestInfoFile(testManagementFieldMapperType, tags) {
     this.#testManagementFieldMapper = Reflect.construct(
       testManagementFieldMapperType,
       [this.#testManagementFieldMapperConfigPath],
     );
-    return this.#testManagementFieldMapper.createTestInfoTemporaryFile(
-      this.#cucumberDocument.getFeatureTags(),
-    ).name;
+    const temp =
+      await this.#testManagementFieldMapper.createTestInfoTemporaryFile(tags);
+    return temp.name;
   }
 
-  async #createXrayTestRepositoryFolder() {
-    if (
-      !this.#testManagementFieldMapper.getTestInfoStructureConfig().generate
-    ) {
-      return;
-    }
+  async #createXrayTestRepositoryFolder(tags) {
     const folders = await this.#xrayClient.getTestFolders('/');
     const folderData = [folders.getFolder.path];
     this.#extractXrayFolders(folderData, folders.getFolder);
-    const folderTarget = this.#buildFolderStructureWithConfig();
-    if (!folderData.includes(folderTarget)) {
+    const folderTarget = this.#buildFolderStructureWithConfig(tags);
+    const createXrayFolder =
+      this.#testManagementFieldMapper.getTestInfoStructureConfig().generate &&
+      !folderData.includes(folderTarget);
+    if (createXrayFolder) {
       logger.info('Create XRay test folder', folderTarget);
       await this.#xrayClient.createTestFolder(folderTarget);
     }
     return folderTarget;
   }
 
-  async #import(tempFeatureFilesPath, tempTestInfoFilePath, xrayFolder) {
-    console.log(tempFeatureFilesPath, tempTestInfoFilePath);
-    for (const featureFilePath of tempFeatureFilesPath) {
-      const response = await this.#xrayClient.importCucumberTestToXray(
-        featureFilePath,
-        tempTestInfoFilePath,
-      );
-      logger.info('Import cucumber feature status', response);
-    }
+  async #import(tempFeatureFilePath, tempTestInfoFilePath) {
+    const response = await this.#xrayClient.importCucumberTestToXray(
+      tempFeatureFilePath,
+      tempTestInfoFilePath,
+    );
+    logger.info('Import cucumber feature status', response);
+    return response;
   }
 
   #extractXrayFolders(folderData, folders) {
@@ -141,13 +152,12 @@ class XrayCucumberImporter extends Importer {
     }
   }
 
-  #buildFolderStructureWithConfig() {
+  #buildFolderStructureWithConfig(tags) {
     const dynamicFolderPath = [];
-    const featureTags = this.#cucumberDocument.getFeatureTags();
     const structure =
       this.#testManagementFieldMapper.getTestInfoStructureConfig().structure;
     this.#extractDynamicFolderWithConfig(dynamicFolderPath, structure);
-    const dynamicFolderValue = featureTags.filter((tag) =>
+    const dynamicFolderValue = tags.filter((tag) =>
       dynamicFolderPath.includes(tag.split(':')[0]),
     );
     return this.#buildFolderPathToCreateToXray(

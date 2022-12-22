@@ -42,6 +42,9 @@ class CucumberDocuments {
     return tempFeatureFilesPath;
   }
 
+  getFeatureContent() {
+    return FileUtils.readFileContent(this.#featureFilePath);
+  }
   extractFeatureTagsData() {
     if (!this.#cucumberDocuments) {
       logger.error('Please load feature file with readFeatureFile method');
