@@ -10,12 +10,10 @@ class TestInfoFieldsMapper {
   #testInfoConfig;
 
   constructor(customFieldMapperPath) {
-    this.#customFieldsMapperConfigPath = FileUtils.getFileAbsolutePath(
-      customFieldMapperPath,
-    );
-    this.#testInfoConfig = parse(
-      fs.readFileSync(this.#customFieldsMapperConfigPath, 'utf8'),
-    );
+    this.#customFieldsMapperConfigPath = customFieldMapperPath
+      ? FileUtils.getFileAbsolutePath(customFieldMapperPath)
+      : false;
+    this.#parseYamlConfig();
   }
 
   getTestInfoConfig() {
@@ -23,11 +21,17 @@ class TestInfoFieldsMapper {
   }
 
   getTestInfoStructureConfig() {
-    return JSON.parse(JSON.stringify(this.#testInfoConfig.folders));
+    if (this.#testInfoConfig.folders) {
+      return JSON.parse(JSON.stringify(this.#testInfoConfig.folders));
+    }
+    return {};
   }
 
   getTestInfoFieldsConfig() {
-    return JSON.parse(JSON.stringify(this.#testInfoConfig.fields));
+    if (this.#testInfoConfig.fields) {
+      return JSON.parse(JSON.stringify(this.#testInfoConfig.fields));
+    }
+    return {};
   }
 
   createTestInfoTemporaryFile(tags) {
@@ -45,6 +49,9 @@ class TestInfoFieldsMapper {
     const testInfoObject = {
       fields: {},
     };
+    if (Object.keys(this.getTestInfoFieldsConfig()).length === 0) {
+      return testInfoObject;
+    }
     for (const field of this.getTestInfoFieldsConfig()) {
       testInfoObject.fields[`${field.fieldKey}`] = [
         {
@@ -80,6 +87,16 @@ class TestInfoFieldsMapper {
       );
     }
     return tag[0].split(':')[1];
+  }
+
+  #parseYamlConfig() {
+    if (this.#customFieldsMapperConfigPath) {
+      this.#testInfoConfig = parse(
+        fs.readFileSync(this.#customFieldsMapperConfigPath, 'utf8'),
+      );
+    } else {
+      this.#testInfoConfig = {};
+    }
   }
 }
 

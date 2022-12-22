@@ -17,17 +17,16 @@ class XrayCucumberImporter extends Importer {
 
   constructor(
     cucumberListFilesPath,
-    testManagementFieldMapperConfigPath,
     clientConfig = {host, clientId, clientSecret, projectId},
+    testManagementFieldMapperConfigPath,
   ) {
     super();
     this.#cucumberListFilesPath = FileUtils.getFileAbsolutePath(
       cucumberListFilesPath,
     );
-    this.#testManagementFieldMapperConfigPath = FileUtils.getFileAbsolutePath(
-      testManagementFieldMapperConfigPath,
-    );
     this.#xrayClient = new XRayClient(clientConfig);
+    this.#testManagementFieldMapperConfigPath =
+      testManagementFieldMapperConfigPath;
   }
 
   async importCucumberToTestManagement(
@@ -66,8 +65,10 @@ class XrayCucumberImporter extends Importer {
     const tempTestInfoFilePath = await this.#createTemporaryTestInfoFile(
       testManagementFieldMapperType,
     );
-    await this.#createXrayTestRepositoryFolder(testManagementType);
-    await this.#import(tempFeatureFilesPath, tempTestInfoFilePath);
+    const xrayFolder = await this.#createXrayTestRepositoryFolder(
+      testManagementType,
+    );
+    await this.#import(tempFeatureFilesPath, tempTestInfoFilePath, xrayFolder);
   }
 
   async #createTemporaryFeatureFileWithExtraTags() {
@@ -113,14 +114,21 @@ class XrayCucumberImporter extends Importer {
     this.#extractXrayFolders(folderData, folders.getFolder);
     const folderTarget = this.#buildFolderStructureWithConfig();
     if (!folderData.includes(folderTarget)) {
-      console.log(folderData, folderTarget);
-      const response = await this.#xrayClient.createTestFolder(folderTarget);
-      console.log(response);
+      logger.info('Create XRay test folder', folderTarget);
+      await this.#xrayClient.createTestFolder(folderTarget);
     }
+    return folderTarget;
   }
 
-  async #import(tempFeatureFilesPath, tempTestInfoFilePath) {
+  async #import(tempFeatureFilesPath, tempTestInfoFilePath, xrayFolder) {
     console.log(tempFeatureFilesPath, tempTestInfoFilePath);
+    for (const featureFilePath of tempFeatureFilesPath) {
+      const response = await this.#xrayClient.importCucumberTestToXray(
+        featureFilePath,
+        tempTestInfoFilePath,
+      );
+      logger.info('Import cucumber feature status', response);
+    }
   }
 
   #extractXrayFolders(folderData, folders) {
@@ -142,15 +150,10 @@ class XrayCucumberImporter extends Importer {
     const dynamicFolderValue = featureTags.filter((tag) =>
       dynamicFolderPath.includes(tag.split(':')[0]),
     );
-    const folderPath = [''];
-    for (const dynamicKey of dynamicFolderPath) {
-      const folderValue = dynamicFolderValue.filter((value) =>
-        value.includes(dynamicKey),
-      );
-      const value = folderValue[0] ? folderValue[0].split(':')[1] : '';
-      folderPath.push(value);
-    }
-    return folderPath.join('/');
+    return this.#buildFolderPathToCreateToXray(
+      dynamicFolderPath,
+      dynamicFolderValue,
+    );
   }
 
   #extractDynamicFolderWithConfig(dynamicFolderPath, structure) {
@@ -162,6 +165,28 @@ class XrayCucumberImporter extends Importer {
         structure.structure,
       );
     }
+  }
+
+  #buildFolderPathToCreateToXray(dynamicFolderPath, dynamicFolderValue) {
+    if (!(dynamicFolderPath.length === dynamicFolderValue.length)) {
+      logger.warn(
+        'Mapping folder structure and dynamic folder value missing dynamic tag data',
+        dynamicFolderPath,
+        dynamicFolderValue,
+      );
+      throw new Error(`'Mapping folder structure and dynamic folder value missing dynamic tag extract data
+        Folder Structure Config: ${dynamicFolderPath}
+        Folder Extract Value: ${dynamicFolderValue}`);
+    }
+    const folderPath = [''];
+    for (const dynamicKey of dynamicFolderPath) {
+      const folderValue = dynamicFolderValue.filter((value) =>
+        value.includes(dynamicKey),
+      );
+      const value = folderValue[0] ? folderValue[0].split(':')[1] : '';
+      folderPath.push(value);
+    }
+    return folderPath.join('/');
   }
 }
 

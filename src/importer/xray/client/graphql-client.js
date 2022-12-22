@@ -115,6 +115,10 @@ class XrayGraphqlClient {
     logger.info('GraphQL Data Response', JSON.stringify(data));
     return data;
   }
+
+  getAuthorizationToken() {
+    return this.#xrayRestClient.getAuthorizationToken();
+  }
 }
 
 exports.XrayGraphqlClient = XrayGraphqlClient;

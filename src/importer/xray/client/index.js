@@ -4,8 +4,10 @@ const {XrayRestClient} = require('./rest-client');
 class XRayClient {
   #xrayRestClient;
   #xrayGraphQLClient;
+  #projectId;
   constructor(clientConfig = {host, clientId, clientSecret, projectId}) {
     const {host, clientId, clientSecret, projectId} = clientConfig;
+    this.#projectId = projectId;
     this.#xrayRestClient = new XrayRestClient(host, clientId, clientSecret);
     this.#xrayGraphQLClient = new XrayGraphqlClient(
       host,
@@ -19,16 +21,14 @@ class XRayClient {
     await this.#xrayRestClient.exchangeAuthorizationToken();
   }
 
-  async importCucumberTestToXray(
-    projectKey,
-    featureFilePath,
-    testInfoFilePath,
-  ) {
-    return await this.#xrayRestClient.importCucumberTestToXray(
-      projectKey,
+  async importCucumberTestToXray(featureFilePath, testInfoFilePath) {
+    await this.exchangeAuthorizationToken();
+    const response = await this.#xrayRestClient.importCucumberTestToXray(
+      this.#projectId,
       featureFilePath,
       testInfoFilePath,
     );
+    return response.data;
   }
 
   getAuthorizationToken() {

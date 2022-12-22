@@ -1,3 +1,4 @@
+const fs = require('fs');
 const axios = require('axios');
 const log4js = require('log4js');
 const logger = log4js.getLogger('xray-rest-client');
@@ -34,13 +35,10 @@ class XrayRestClient {
     logger.info('JWT Token', this.#authorizationToken);
   }
 
-  async importCucumberTestToXray(
-    projectKey,
-    featureFilePath,
-    testInfoFilePath,
-  ) {
+  async importCucumberTestToXray(projectId, featureFilePath, testInfoFilePath) {
+    await this.exchangeAuthorizationToken();
     return await axios.post(
-      `https://${this.#host}/api/v2/import/feature?projectKey=${projectKey}`,
+      `https://${this.#host}/api/v2/import/feature?projectKey=${projectId}`,
       {
         file: fs.createReadStream(featureFilePath),
         testInfo: fs.createReadStream(testInfoFilePath),
@@ -56,6 +54,10 @@ class XrayRestClient {
 
   getAuthorizationToken() {
     return this.#authorizationToken;
+  }
+
+  setAuthorizationToken(authorizationToken) {
+    this.#authorizationToken = authorizationToken;
   }
 }
 
