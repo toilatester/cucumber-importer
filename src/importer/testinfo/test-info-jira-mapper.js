@@ -1,5 +1,4 @@
 const {parse} = require('yaml');
-const {TEST_MANAGEMENT_TYPE} = require('../../test-management');
 const {FileUtils} = require('../../utils/file-utils');
 const fs = require('fs');
 const log4js = require('log4js');
@@ -9,14 +8,8 @@ logger.level = 'info';
 class TestInfoFieldsMapper {
   #customFieldsMapperConfigPath;
   #testInfoConfig;
-  #jiraClient;
 
   constructor(customFieldMapperPath) {
-    this.#jiraClient = new TEST_MANAGEMENT_TYPE.JIRA_CLOUD({
-      host: process.env.JIRA_HOST,
-      username: process.env.JIRA_USERNAME,
-      token: process.env.JIRA_TOKEN,
-    });
     this.#customFieldsMapperConfigPath = customFieldMapperPath
       ? FileUtils.getFileAbsolutePath(customFieldMapperPath)
       : false;
@@ -60,60 +53,23 @@ class TestInfoFieldsMapper {
       return testInfoObject;
     }
     for (const field of this.getTestInfoFieldsConfig()) {
-      if (field.optionType === ' single') {
-        if (field.optionDynamic) {
-          const customFieldValue = this.#getOptionValueByDynamicData(
-            tags,
+      switch (field.optionType) {
+        case 'single':
+          this.#buildCustomFieldWithSingleChoiceType(
             field,
+            tags,
+            testInfoObject,
           );
-          const fieldOptionId = await this.#getCustomFieldOptionId(
-            field.fieldKey,
-            customFieldValue,
+          break;
+        case 'multiple':
+          this.#buildCustomFieldWithMultipleChoiceType(
+            field,
+            tags,
+            testInfoObject,
           );
-          testInfoObject.fields[`${field.fieldKey}`] = {
-            id: fieldOptionId,
-            value: customFieldValue,
-          };
-        } else {
-          const fieldOptionId = await this.#getCustomFieldOptionId(
-            field.fieldKey,
-            field.optionValue,
-          );
-          testInfoObject.fields[`${field.fieldKey}`] = {
-            id: fieldOptionId,
-            value: field.optionValue,
-          };
-        }
-      } else if (field.optionType === ' multiple') {
-        const fields = [];
-        if (field.optionDynamic) {
-          for (const tagValueForExtracting of field.tagValueForExtractingOptionValue) {
-            const customFieldValue = this.#getOptionValueByTags(
-              tags,
-              tagValueForExtracting,
-            );
-            const fieldOptionId = await this.#getCustomFieldOptionId(
-              field.fieldKey,
-              customFieldValue,
-            );
-            fields.push({
-              id: fieldOptionId,
-              value: customFieldValue,
-            });
-          }
-          testInfoObject.fields[`${field.fieldKey}`] = fields;
-        } else {
-          const fieldOptionId = await this.#getCustomFieldOptionId(
-            field.fieldKey,
-            field.optionValue,
-          );
-          testInfoObject.fields[`${field.fieldKey}`] = [
-            {
-              id: fieldOptionId,
-              value: field.optionValue,
-            },
-          ];
-        }
+          break;
+        default:
+          throw new Error(`Custom field ${field.optionType} does not support`);
       }
     }
     return testInfoObject;
@@ -155,26 +111,39 @@ class TestInfoFieldsMapper {
     }
   }
 
-  async #getCustomFieldOptionId(fieldId, optionValue) {
-    const fieldContextResponse = await this.#jiraClient.getFieldContextValue(
-      fieldId,
-    );
-    const fieldOptionsResponse =
-      await this.#jiraClient.getFieldContextOptionValues(
-        fieldId,
-        fieldContextResponse.values[0]['id'],
-      );
-    const filterOptionIds = fieldOptionsResponse.values.filter((fieldOption) =>
-      fieldOption.value.includes(optionValue),
-    );
-    if (filterOptionIds.length === 0) {
-      throw new Error(
-        `Cannot find option value id for option ${optionValue} in ${JSON.stringify(
-          fieldOptionsResponse.values,
-        )}`,
-      );
+  #buildCustomFieldWithSingleChoiceType(field, tags, testInfoObject) {
+    if (field.optionDynamic) {
+      const customFieldValue = this.#getOptionValueByDynamicData(tags, field);
+      testInfoObject.fields[`${field.fieldKey}`] = {
+        value: customFieldValue,
+      };
+    } else {
+      testInfoObject.fields[`${field.fieldKey}`] = {
+        value: field.optionValue,
+      };
     }
-    return filterOptionIds[0]['id'];
+  }
+
+  #buildCustomFieldWithMultipleChoiceType(field, tags, testInfoObject) {
+    const fields = [];
+    if (field.optionDynamic) {
+      for (const tagValueForExtracting of field.tagValueForExtractingOptionValue) {
+        const customFieldValue = this.#getOptionValueByTags(
+          tags,
+          tagValueForExtracting,
+        );
+        fields.push({
+          value: customFieldValue,
+        });
+      }
+    } else {
+      for (const fieldValue of field.optionValue) {
+        fields.push({
+          value: fieldValue,
+        });
+      }
+    }
+    testInfoObject.fields[`${field.fieldKey}`] = fields;
   }
 }
 

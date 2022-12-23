@@ -1,5 +1,4 @@
 const {GraphQLClient} = require('graphql-request');
-const Constant = require('../../../utils/constant');
 const {XrayRestClient} = require('./rest-client');
 const {
   graphqlCreateFolder,
@@ -32,14 +31,11 @@ class XrayGraphqlClient {
 
   async getTestFolders(rootPath) {
     await this.#authenticateRequest();
-    const xrayGraphQLClient = new GraphQLClient(
-      `https://${this.#host}/${Constant.GRAPHQL_API_PATH}`,
-      {
-        headers: {
-          authorization: this.#xrayRestClient.getAuthorizationToken(),
-        },
+    const xrayGraphQLClient = new GraphQLClient(this.#getXRayApiUrl(), {
+      headers: {
+        authorization: this.#xrayRestClient.getAuthorizationToken(),
       },
-    );
+    });
     const variables = {
       projectId: this.#projectId,
       path: rootPath,
@@ -51,14 +47,11 @@ class XrayGraphqlClient {
 
   async createTestFolder(folderPath) {
     await this.#authenticateRequest();
-    const xrayGraphQLClient = new GraphQLClient(
-      `https://${this.#host}/${Constant.GRAPHQL_API_PATH}`,
-      {
-        headers: {
-          authorization: this.#xrayRestClient.getAuthorizationToken(),
-        },
+    const xrayGraphQLClient = new GraphQLClient(this.#getXRayApiUrl(), {
+      headers: {
+        authorization: this.#xrayRestClient.getAuthorizationToken(),
       },
-    );
+    });
     const variables = {
       projectId: this.#projectId,
       path: folderPath,
@@ -73,14 +66,11 @@ class XrayGraphqlClient {
 
   async deleteTestFolder(folderPath) {
     await this.#authenticateRequest();
-    const xrayGraphQLClient = new GraphQLClient(
-      `https://${this.#host}/${Constant.GRAPHQL_API_PATH}`,
-      {
-        headers: {
-          authorization: this.#xrayRestClient.getAuthorizationToken(),
-        },
+    const xrayGraphQLClient = new GraphQLClient(this.#getXRayApiUrl(), {
+      headers: {
+        authorization: this.#xrayRestClient.getAuthorizationToken(),
       },
-    );
+    });
     const variables = {
       projectId: this.#projectId,
       path: folderPath,
@@ -95,14 +85,11 @@ class XrayGraphqlClient {
 
   async addTestsToFolder(folderPath, testIssueIds) {
     await this.#authenticateRequest();
-    const xrayGraphQLClient = new GraphQLClient(
-      `https://${this.#host}/${Constant.GRAPHQL_API_PATH}`,
-      {
-        headers: {
-          authorization: this.#xrayRestClient.getAuthorizationToken(),
-        },
+    const xrayGraphQLClient = new GraphQLClient(this.#getXRayApiUrl(), {
+      headers: {
+        authorization: this.#xrayRestClient.getAuthorizationToken(),
       },
-    );
+    });
     const variables = {
       projectId: this.#projectId,
       path: folderPath,
@@ -118,6 +105,10 @@ class XrayGraphqlClient {
 
   getAuthorizationToken() {
     return this.#xrayRestClient.getAuthorizationToken();
+  }
+
+  #getXRayApiUrl() {
+    return `https://${this.#host}/api/v2/graphql`;
   }
 }
 
