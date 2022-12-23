@@ -9,7 +9,7 @@ const {program} = require('commander');
 program
   .name('cucumber-importer')
   .description(
-    'Plugin to support import cucumber feature file to test management system as a test case',
+    'Plugin to support import a cucumber feature file to test management system as a test case',
   )
   .version('0.1.0');
 
