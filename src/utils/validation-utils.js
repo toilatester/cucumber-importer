@@ -1,6 +1,5 @@
 const {ENVIRONMENT_KEYS_REQUIRE} = require('./constant');
 function validateEnvironmentVariables(enviromentVariables, logger) {
-  console.log(ENVIRONMENT_KEYS_REQUIRE);
   for (const keyRequired of ENVIRONMENT_KEYS_REQUIRE) {
     const missingValueInEnvironmentVariables =
       !enviromentVariables.includes(keyRequired);

@@ -169,6 +169,21 @@ program
 program.parse();
 
 function initJiraClient(options) {
+  validateQueryJiraRequiredData(options);
+  const {jiraHost, jiraUsername, jiraPassword} =
+    getQueryJiraRequiredData(options);
+  return new TEST_MANAGEMENT_TYPE.JIRA_CLOUD({
+    host: jiraHost,
+    username: jiraUsername,
+    token: jiraPassword,
+  });
+}
+
+async function askUserInput(prompt, question) {
+  return await prompt([question]);
+}
+
+function validateQueryJiraRequiredData(options) {
   let {jiraHost, jiraUsername, jiraPassword} = options;
   jiraHost = jiraHost || process.env.JIRA_HOST;
   jiraUsername = jiraUsername || process.env.JIRA_USERNAME;
@@ -181,13 +196,12 @@ function initJiraClient(options) {
         '[JIRA_HOST, JIRA_USERNAME, JIRA_TOKEN] ',
     );
   }
-  return new TEST_MANAGEMENT_TYPE.JIRA_CLOUD({
-    host: jiraHost,
-    username: jiraUsername,
-    token: jiraPassword,
-  });
 }
 
-async function askUserInput(prompt, question) {
-  return await prompt([question]);
+function getQueryJiraRequiredData(options) {
+  let {jiraHost, jiraUsername, jiraPassword} = options;
+  jiraHost = jiraHost || process.env.JIRA_HOST;
+  jiraUsername = jiraUsername || process.env.JIRA_USERNAME;
+  jiraPassword = jiraPassword || process.env.JIRA_TOKEN;
+  return {jiraHost, jiraUsername, jiraPassword};
 }
