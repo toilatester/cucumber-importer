@@ -149,16 +149,30 @@ program
   )
   .action(async () => {
     const prompt = inquirer.createPromptModule();
+
     console.log(
       await askUserInput(prompt, {
+        type: 'input',
         name: 'configFileName',
         message: 'What is your config file name?',
       }),
     );
     console.log(
       await askUserInput(prompt, {
+        type: 'list',
         name: 'allowCreateFolderInTestManagement',
-        message: 'What is your config file name?',
+        message:
+          'Will the plugin automatically create folder in a test management tool',
+        choices: ['yes', 'no'],
+      }),
+    );
+    console.log(
+      await askUserInput(prompt, {
+        type: 'list',
+        name: 'allowAddCustomFieldValue',
+        message:
+          'Will the plugin automatically add custom field value when importing Cucumber to a test management tool',
+        choices: ['yes', 'no'],
       }),
     );
   });
