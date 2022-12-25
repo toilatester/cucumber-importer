@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const {IMPORTER_TYPE} = require('./src/importer');
 const {TEST_INFO_MAPPER_TYPE} = require('./src/importer/testinfo');
 const {validateEnvironmentVariables} = require('./src/utils/validation-utils');

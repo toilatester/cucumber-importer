@@ -1,5 +1,8 @@
 {
   "name": "cucumber-importer",
+  "bin": {
+    "cucumber-importer": "./index.js"
+  },
   "version": "0.0.1",
   "description": "Plugn to support import cucumber feature file to test management system",
   "main": "index.js",
