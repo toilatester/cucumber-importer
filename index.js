@@ -1,12 +1,15 @@
 const {IMPORTER_TYPE} = require('./src/importer');
 const {TEST_INFO_MAPPER_TYPE} = require('./src/importer/testinfo');
 const {TEST_MANAGEMENT_TYPE} = require('./src/test-management');
+const {validateEnvironmentVariables} = require('./src/utils/validation-utils');
 const inquirer = require('inquirer');
 const log4js = require('log4js');
 const logger = log4js.getLogger('main');
 logger.level = 'info';
+require('dotenv').config();
 
 const {program} = require('commander');
+validateEnvironmentVariables(Object.keys(process.env), logger);
 
 program
   .name('cucumber-importer')
@@ -18,35 +21,29 @@ program
 program
   .command('import-xray-jira-cloud')
   .description('Import list of cucumber feature files to test management tool')
-  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
-  .requiredOption(
-    '-ju --jira-username <username>',
-    'The username to authenticate Jira',
-  )
-  .requiredOption(
-    '-jp --jira-password <password>',
-    'The password to authenticate Jira',
-  )
-  .requiredOption(
+  .option('-jh --jira-host <host>', 'The domain value for Jira')
+  .option('-ju --jira-username <username>', 'The username to authenticate Jira')
+  .option('-jp --jira-password <password>', 'The password to authenticate Jira')
+  .option(
     '-xp --xray-project-id <projectId>',
     'The project ID to import Cucumber test ' +
       '[https://docs.getxray.app/display/XRAYCLOUD/Importing+Cucumber+Tests+-+REST]',
   )
-  .requiredOption(
+  .option(
     '-xh --xray-host <host>',
     'The domain value for Xray',
     'xray.cloud.getxray.app',
   )
-  .requiredOption(
+  .option(
     '-xu --xray-username <username|clientId>',
     'The username/clientId to authenticate Xray ' +
       '[https://docs.getxray.app/display/XRAYCLOUD/Global+Settings%3A+API+Keys]',
   )
-  .requiredOption(
+  .option(
     '-xt --xray-token <token|password>',
     'The token|password to authenticate Xray [https://docs.getxray.app/display/XRAYCLOUD/Global+Settings%3A+API+Keys]',
   )
-  .requiredOption(
+  .option(
     '-i, --import-list-file-path <filePath>',
     'Path to the file contains list of cucumber file for importing to tets management',
   )
@@ -93,15 +90,9 @@ program
   .description(
     'Query an extract information for preparing test management config file',
   )
-  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
-  .requiredOption(
-    '-ju --jira-username <username>',
-    'The username to authenticate Jira',
-  )
-  .requiredOption(
-    '-jp --jira-password <password>',
-    'The password to authenticate Jira',
-  )
+  .option('-jh --jira-host <host>', 'The domain value for Jira')
+  .option('-ju --jira-username <username>', 'The username to authenticate Jira')
+  .option('-jp --jira-password <password>', 'The password to authenticate Jira')
   .action(async (options) => {
     logger.info('Get all projects in Jira Cloud with option', options);
     const jira = initJiraClient(options);
@@ -120,15 +111,9 @@ program
   .description(
     'Query an extract information for preparing test management config file',
   )
-  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
-  .requiredOption(
-    '-ju --jira-username <username>',
-    'The username to authenticate Jira',
-  )
-  .requiredOption(
-    '-jp --jira-password <password>',
-    'The password to authenticate Jira',
-  )
+  .option('-jh --jira-host <host>', 'The domain value for Jira')
+  .option('-ju --jira-username <username>', 'The username to authenticate Jira')
+  .option('-jp --jira-password <password>', 'The password to authenticate Jira')
   .action(async (options) => {
     logger.info('Get all fields in Jira Cloud with option', options);
     const jira = initJiraClient(options);
@@ -151,15 +136,9 @@ program
   .description(
     'Query an extract information for preparing test management config file',
   )
-  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
-  .requiredOption(
-    '-ju --jira-username <username>',
-    'The username to authenticate Jira',
-  )
-  .requiredOption(
-    '-jp --jira-password <password>',
-    'The password to authenticate Jira',
-  )
+  .option('-jh --jira-host <host>', 'The domain value for Jira')
+  .option('-ju --jira-username <username>', 'The username to authenticate Jira')
+  .option('-jp --jira-password <password>', 'The password to authenticate Jira')
   .action(async (options) => {
     logger.info('Get all fields in Jira Cloud with option', options);
     const jira = initJiraClient(options);
@@ -190,7 +169,18 @@ program
 program.parse();
 
 function initJiraClient(options) {
-  const {jiraHost, jiraUsername, jiraPassword} = options;
+  let {jiraHost, jiraUsername, jiraPassword} = options;
+  jiraHost = jiraHost || process.env.JIRA_HOST;
+  jiraUsername = jiraUsername || process.env.JIRA_USERNAME;
+  jiraPassword = jiraPassword || process.env.JIRA_TOKEN;
+  const missingRequiredData = !jiraHost || !jiraUsername || !jiraPassword;
+  if (missingRequiredData) {
+    throw new Error(
+      'Please input value for Jira host with [-jh], Jira username with [-ju] and jiraToken with [-jp].' +
+        'Or use case use .env file for setting the environemnt variables with values ' +
+        '[JIRA_HOST, JIRA_USERNAME, JIRA_TOKEN] ',
+    );
+  }
   return new TEST_MANAGEMENT_TYPE.JIRA_CLOUD({
     host: jiraHost,
     username: jiraUsername,
