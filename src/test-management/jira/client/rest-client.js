@@ -31,17 +31,60 @@ class JiraRestClient {
     return this.#jiraClient;
   }
 
+  async getAllJiraProjects() {
+    return await this.#jiraClient.listProjects();
+  }
+
+  async getAllJiraFieldOptions() {
+    const fields = await this.getAllJiraFields();
+    for (const field of fields) {
+      try {
+        const {key, name, schema, custom} = field;
+        const {type, customId} = schema || {};
+        const fieldContext = await this.getJiraFieldContextValue(key);
+        const fieldContextValue = fieldContext.values;
+        if (fieldContextValue) {
+          const fieldContextId = fieldContextValue[0]['id'];
+          const {id, isGlobalContext, isAnyIssueType} = fieldContextValue[0];
+          const fieldOptions = await this.getJiraFieldContextOptionValues(
+            key,
+            id,
+          );
+          const fieldOptionValues = fieldOptions.values;
+          const fieldOptionErrorMessages = fieldOptions.errorMessages;
+          const customFieldOptionValues = fieldOptionErrorMessages
+            ? `[${fieldOptionErrorMessages}]`
+            : JSON.stringify(fieldOptionValues);
+          logger.info(`
+          Field name [${name}]
+          Field key [${key}]
+          Field context id [${fieldContextId}]
+          Custom field [${custom}]
+          Custom field type [${type}]
+          CustomId [${customId}]
+          Context id ${id}
+          Field with global context [${isGlobalContext}]
+          Field config for any issue type [${isAnyIssueType}]
+          Field options ${customFieldOptionValues}
+          `);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+
   async getAllJiraFields() {
     return await this.#jiraClient.listFields();
   }
 
-  async getAllIssueType() {
+  async getAllJiraIssueType() {
     return await this.#jiraClient.listIssueTypes();
   }
 
-  async getFieldContextValue(filedKey) {
+  async getJiraFieldContextValue(fieldKey) {
     const response = await axios.get(
-      `https://${this.#jiraHost}/rest/api/3/field/${filedKey}/context`,
+      `https://${this.#jiraHost}/rest/api/3/field/${fieldKey}/context`,
       {
         validateStatus: (status) => status >= 200 && status < 500,
         headers: {
@@ -54,11 +97,11 @@ class JiraRestClient {
     return response.data;
   }
 
-  async getFieldContextOptionValues(filedKey, contextId) {
+  async getJiraFieldContextOptionValues(fieldKey, contextId) {
     const response = await axios.get(
       `https://${
         this.#jiraHost
-      }/rest/api/3/field/${filedKey}/context/${contextId}/option`,
+      }/rest/api/3/field/${fieldKey}/context/${contextId}/option`,
       {
         validateStatus: (status) => status >= 200 && status < 500,
         headers: {

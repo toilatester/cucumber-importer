@@ -1,5 +1,6 @@
 const {IMPORTER_TYPE} = require('./src/importer');
 const {TEST_INFO_MAPPER_TYPE} = require('./src/importer/testinfo');
+const {TEST_MANAGEMENT_TYPE} = require('./src/test-management');
 const log4js = require('log4js');
 const logger = log4js.getLogger('main');
 logger.level = 'info';
@@ -87,15 +88,90 @@ program
   });
 
 program
-  .command('query-test-management')
+  .command('query-jira-projects')
   .description(
     'Query an extract information for preparing test management config file',
   )
-  .requiredOption('--first', 'display just the first substring')
-  .requiredOption('-s, --separator <char>', 'separator character', ',')
-  .action((str, options) => {
-    const limit = options.first ? 1 : undefined;
-    console.log(str.split(options.separator, limit));
+  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
+  .requiredOption(
+    '-ju --jira-username <username>',
+    'The username to authenticate Jira',
+  )
+  .requiredOption(
+    '-jp --jira-password <password>',
+    'The password to authenticate Jira',
+  )
+  .action(async (options) => {
+    logger.info('Get all projects in Jira Cloud with option', options);
+    const jira = initJiraClient(options);
+    const projects = await jira.getAllJiraProjects();
+    for (const project of projects) {
+      const {id, key, name} = project;
+      logger.info(`
+      Project name [${name}]
+      Project key [${key}]
+      Project id [${id}]`);
+    }
+  });
+
+program
+  .command('query-jira-project-fields')
+  .description(
+    'Query an extract information for preparing test management config file',
+  )
+  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
+  .requiredOption(
+    '-ju --jira-username <username>',
+    'The username to authenticate Jira',
+  )
+  .requiredOption(
+    '-jp --jira-password <password>',
+    'The password to authenticate Jira',
+  )
+  .action(async (options) => {
+    logger.info('Get all fields in Jira Cloud with option', options);
+    const jira = initJiraClient(options);
+    const fields = await jira.getAllJiraFields();
+    for (const field of fields) {
+      const {id, key, name, custom, schema} = field;
+      const {type, customId} = schema || {};
+      logger.info(`
+      Field name [${name}]
+      Field key [${key}]
+      Field id [${id}]
+      Custom field [${custom}]
+      Custom field type [${type}]
+      CustomId [${customId}]`);
+    }
+  });
+
+program
+  .command('query-jira-project-fields-options')
+  .description(
+    'Query an extract information for preparing test management config file',
+  )
+  .requiredOption('-jh --jira-host <host>', 'The domain value for Jira')
+  .requiredOption(
+    '-ju --jira-username <username>',
+    'The username to authenticate Jira',
+  )
+  .requiredOption(
+    '-jp --jira-password <password>',
+    'The password to authenticate Jira',
+  )
+  .action(async (options) => {
+    logger.info('Get all fields in Jira Cloud with option', options);
+    const jira = initJiraClient(options);
+    await jira.getAllJiraFieldOptions();
   });
 
 program.parse();
+
+function initJiraClient(options) {
+  const {jiraHost, jiraUsername, jiraPassword} = options;
+  return new TEST_MANAGEMENT_TYPE.JIRA_CLOUD({
+    host: jiraHost,
+    username: jiraUsername,
+    token: jiraPassword,
+  });
+}
