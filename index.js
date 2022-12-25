@@ -1,6 +1,7 @@
 const {IMPORTER_TYPE} = require('./src/importer');
 const {TEST_INFO_MAPPER_TYPE} = require('./src/importer/testinfo');
 const {TEST_MANAGEMENT_TYPE} = require('./src/test-management');
+const inquirer = require('inquirer');
 const log4js = require('log4js');
 const logger = log4js.getLogger('main');
 logger.level = 'info';
@@ -165,6 +166,27 @@ program
     await jira.getAllJiraFieldOptions();
   });
 
+program
+  .command('init')
+  .description(
+    'Init and config an extract information for preparing test management config file',
+  )
+  .action(async () => {
+    const prompt = inquirer.createPromptModule();
+    console.log(
+      await askUserInput(prompt, {
+        name: 'configFileName',
+        message: 'What is your config file name?',
+      }),
+    );
+    console.log(
+      await askUserInput(prompt, {
+        name: 'allowCreateFolderInTestManagement',
+        message: 'What is your config file name?',
+      }),
+    );
+  });
+
 program.parse();
 
 function initJiraClient(options) {
@@ -174,4 +196,8 @@ function initJiraClient(options) {
     username: jiraUsername,
     token: jiraPassword,
   });
+}
+
+async function askUserInput(prompt, question) {
+  return await prompt([question]);
 }
