@@ -149,33 +149,9 @@ program
     'Init and config an extract information for preparing test management config file',
   )
   .action(async () => {
+    const initInputOption = {};
     const prompt = inquirer.createPromptModule();
-
-    console.log(
-      await askUserInput(prompt, {
-        type: 'input',
-        name: 'configFileName',
-        message: 'What is your config file name?',
-      }),
-    );
-    console.log(
-      await askUserInput(prompt, {
-        type: 'list',
-        name: 'allowCreateFolderInTestManagement',
-        message:
-          'Will the plugin automatically create folder in a test management tool',
-        choices: ['yes', 'no'],
-      }),
-    );
-    console.log(
-      await askUserInput(prompt, {
-        type: 'list',
-        name: 'allowAddCustomFieldValue',
-        message:
-          'Will the plugin automatically add custom field value when importing Cucumber to a test management tool',
-        choices: ['yes', 'no'],
-      }),
-    );
+    Object.assign(initInputOption, await askUserInput(prompt, {}));
   });
 
 program.parse();
