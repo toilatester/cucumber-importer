@@ -158,7 +158,9 @@ program
         type: 'list',
         name: 'syncTestFolderToTestManagement',
         choices: ['true', 'false'],
-        message: 'Do you want to sync test folder to test management?',
+        message:
+          'Do you want to generate test folder to test management with Cucumber @Tag value?',
+        filter: (data) => data === 'true',
       }),
     );
     console.log(initInputOption);
@@ -170,7 +172,8 @@ program
         name: 'addCustomFieldToTestManagement',
         choices: ['true', 'false'],
         message:
-          'Do you want to sync Cucumber to test management with custom fields?',
+          'Do you want to sync Cucumber features to test management with custom fields?',
+        filter: (data) => data === 'true',
       }),
     );
     console.log(initInputOption);
