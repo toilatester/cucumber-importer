@@ -86,13 +86,10 @@ function getXrayRequiredData(options) {
   };
 }
 
-const questions = [];
-
 module.exports = {
   initJiraClient,
   validateQueryJiraRequiredData,
   getQueryJiraRequiredData,
   validateXRayRequiredData,
   getXrayRequiredData,
-  questions,
 };

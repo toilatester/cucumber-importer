@@ -151,7 +151,29 @@ program
   .action(async () => {
     const initInputOption = {};
     const prompt = inquirer.createPromptModule();
-    Object.assign(initInputOption, await askUserInput(prompt, {}));
+    Object.assign(
+      initInputOption,
+      await askUserInput(prompt, {
+        default: 'false',
+        type: 'list',
+        name: 'syncTestFolderToTestManagement',
+        choices: ['true', 'false'],
+        message: 'Do you want to sync test folder to test management?',
+      }),
+    );
+    console.log(initInputOption);
+    Object.assign(
+      initInputOption,
+      await askUserInput(prompt, {
+        type: 'list',
+        default: 'false',
+        name: 'addCustomFieldToTestManagement',
+        choices: ['true', 'false'],
+        message:
+          'Do you want to sync Cucumber to test management with custom fields?',
+      }),
+    );
+    console.log(initInputOption);
   });
 
 program.parse();
