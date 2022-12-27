@@ -36,12 +36,12 @@ class JiraRestClient {
   }
 
   async getAllJiraFieldOptions() {
-    const fields = await this.getAllJiraFields();
-    if (fields.length === 0) {
-      logger.warn('Cannt get list of fields in your Jira');
-    }
-    for (const field of fields) {
-      try {
+    try {
+      const fields = await this.getAllJiraFields();
+      if (fields.length === 0) {
+        logger.warn('Cannt get list of fields in your Jira');
+      }
+      for (const field of fields) {
         const {key, name, schema, custom} = field;
         const {type, customId} = schema || {};
         const fieldContext = await this.getJiraFieldContextValue(key);
@@ -71,9 +71,13 @@ class JiraRestClient {
           Field options ${customFieldOptionValues}
           `);
         }
-      } catch (err) {
-        logger.error(err);
       }
+    } catch (err) {
+      logger.error(
+        'Error when request to Jira, please review your Jira host, ' +
+          'Jira username and Jira password/token',
+      );
+      logger.error(err);
     }
   }
 
