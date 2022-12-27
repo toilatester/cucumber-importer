@@ -86,10 +86,84 @@ function getXrayRequiredData(options) {
   };
 }
 
+async function askUserInput(prompt, question) {
+  return await prompt(question);
+}
+
+async function getCustomFieldsOptionsForCreatingConfigFile(prompt) {
+  let jiraClientOptions = await askDataForCustomFieldsImporter(prompt);
+  await initJiraClient(jiraClientOptions).getAllJiraFieldOptions();
+  let answers = await askInputJiraOptionsAgain(prompt);
+  while (answers.askAgain) {
+    const reusePreviousInput = await askUserInput(prompt, [
+      {
+        type: 'confirm',
+        name: 'reusePreviousInputJiraOptions',
+        message:
+          'Do you want to reuse previous input of Jira options(just hit enter for YES)?',
+        default: true,
+      },
+    ]);
+    if (!reusePreviousInput.reusePreviousInputJiraOptions) {
+      jiraClientOptions = await askDataForCustomFieldsImporter(prompt);
+    }
+    await initJiraClient(jiraClientOptions).getAllJiraFieldOptions();
+    answers = await askInputJiraOptionsAgain(prompt);
+  }
+}
+
+async function askDataForCustomFieldsImporter(prompt) {
+  const jiraOptions = {};
+  const answers = await askUserInput(prompt, [
+    {
+      type: 'input',
+      name: 'jiraHost',
+      message: 'Please input your Jira host?',
+      validate: (data) => {
+        jiraOptions['jiraHost'] = data;
+        return data.length > 0;
+      },
+    },
+    {
+      type: 'input',
+      name: 'jiraUsername',
+      message: 'Please input your Jira username?',
+      validate: (data) => {
+        jiraOptions['jiraUsername'] = data;
+        return data.length > 0;
+      },
+    },
+    {
+      type: 'input',
+      name: 'jiraPassword',
+      message: 'Please input your Jira password or token?',
+      validate: async (data) => {
+        jiraOptions['jiraPassword'] = data;
+        return data.length > 0;
+      },
+    },
+  ]);
+  return answers;
+}
+
+async function askInputJiraOptionsAgain(prompt) {
+  return await askUserInput(prompt, [
+    {
+      type: 'confirm',
+      name: 'askAgain',
+      message:
+        'Do you want to get Jira custom field key and custom field options again (just hit enter for NO)?',
+      default: false,
+    },
+  ]);
+}
+
 module.exports = {
   initJiraClient,
   validateQueryJiraRequiredData,
   getQueryJiraRequiredData,
   validateXRayRequiredData,
   getXrayRequiredData,
+  askUserInput,
+  getCustomFieldsOptionsForCreatingConfigFile,
 };

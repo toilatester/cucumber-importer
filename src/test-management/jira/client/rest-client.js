@@ -37,6 +37,9 @@ class JiraRestClient {
 
   async getAllJiraFieldOptions() {
     const fields = await this.getAllJiraFields();
+    if (fields.length === 0) {
+      logger.warn('Cannt get list of fields in your Jira');
+    }
     for (const field of fields) {
       try {
         const {key, name, schema, custom} = field;
@@ -69,7 +72,7 @@ class JiraRestClient {
           `);
         }
       } catch (err) {
-        console.error(err);
+        logger.error(err);
       }
     }
   }
