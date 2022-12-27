@@ -74,6 +74,10 @@ class JiraRestClient {
     }
   }
 
+  async getUserProfile() {
+    return await this.#jiraClient.getCurrentUser();
+  }
+
   async getAllJiraFields() {
     return await this.#jiraClient.listFields();
   }

@@ -149,38 +149,170 @@ program
     'Init and config an extract information for preparing test management config file',
   )
   .action(async () => {
-    const initInputOption = {};
+    const initConfigFileInputOption = {};
     const prompt = inquirer.createPromptModule();
     Object.assign(
-      initInputOption,
-      await askUserInput(prompt, {
-        default: 'false',
-        type: 'list',
-        name: 'syncTestFolderToTestManagement',
-        choices: ['true', 'false'],
-        message:
-          'Do you want to generate test folder to test management with Cucumber @Tag value?',
-        filter: (data) => data === 'true',
-      }),
+      initConfigFileInputOption,
+      await askUserInput(prompt, [
+        {
+          default: 'false',
+          type: 'list',
+          name: 'syncTestFolderToTestManagement',
+          choices: ['true', 'false'],
+          message:
+            'Do you want to generate test folder to test management with Cucumber @Tag value?',
+          filter: (data) => data === 'true',
+        },
+      ]),
     );
-    console.log(initInputOption);
+    console.log(initConfigFileInputOption);
     Object.assign(
-      initInputOption,
-      await askUserInput(prompt, {
-        type: 'list',
-        default: 'false',
-        name: 'addCustomFieldToTestManagement',
-        choices: ['true', 'false'],
-        message:
-          'Do you want to sync Cucumber features to test management with custom fields?',
-        filter: (data) => data === 'true',
-      }),
+      initConfigFileInputOption,
+      await askUserInput(prompt, [
+        {
+          type: 'list',
+          default: 'false',
+          name: 'addCustomFieldToTestManagement',
+          choices: ['true', 'false'],
+          message:
+            'Do you want to sync Cucumber features to test management with custom fields?',
+          filter: (data) => data === 'true',
+        },
+      ]),
     );
-    console.log(initInputOption);
+    console.log(initConfigFileInputOption);
+    if (initConfigFileInputOption.addCustomFieldToTestManagement) {
+      // const jiraOptions = {}
+      // Object.assign(jiraOptions, await askUserInput(prompt, [{
+      //   type: 'input',
+      //   name: 'jiraHost',
+      //   message:
+      //     'Please input your Jira host?',
+      //   validate: (data) => {
+      //     jiraOptions['jiraHost'] = data;
+      //     return true;
+      //   }
+      // },
+      // {
+      //   type: 'input',
+      //   name: 'jiraUsername',
+      //   message:
+      //     'Please input your Jira username?',
+      //   validate: (data) => {
+      //     jiraOptions['jiraUsername'] = data;
+      //     return true;
+      //   }
+      // },
+      // {
+      //   type: 'input',
+      //   name: 'jiraPassword',
+      //   message:
+      //     'Please input your Jira password or token?',
+      //   validate: async (data) => {
+      //     jiraOptions['jiraPassword'] = data;
+      //     await initJiraClient(jiraOptions).getAllJiraFieldOptions();
+      //     return true;
+      //   }
+      // },
+      // {
+      //   type: 'confirm',
+      //   name: 'askAgain',
+      //   message: 'Want to get Jira custom field key and custom field options again (just hit enter for YES)?',
+      //   default: true,
+      // }
+      // ]));
+      // const answers = await askUserInput(prompt, [{
+      //   type: 'input',
+      //   name: 'jiraHost',
+      //   message:
+      //     'Please input your Jira host?',
+      //   validate: (data) => {
+      //     jiraOptions['jiraHost'] = data;
+      //     return true;
+      //   }
+      // },
+      // {
+      //   type: 'input',
+      //   name: 'jiraUsername',
+      //   message:
+      //     'Please input your Jira username?',
+      //   validate: (data) => {
+      //     jiraOptions['jiraUsername'] = data;
+      //     return true;
+      //   }
+      // },
+      // {
+      //   type: 'input',
+      //   name: 'jiraPassword',
+      //   message:
+      //     'Please input your Jira password or token?',
+      //   validate: async (data) => {
+      //     jiraOptions['jiraPassword'] = data;
+      //     await initJiraClient(jiraOptions).getAllJiraFieldOptions();
+      //     return true;
+      //   }
+      // },
+      // {
+      //   type: 'confirm',
+      //   name: 'askAgain',
+      //   message: 'Want to get Jira custom field key and custom field options again (just hit enter for YES)?',
+      //   default: true,
+      // }
+      // ]);
+
+      // const jiraClient = initJiraClient(jiraOptions);
+      // await jiraClient.getAllJiraFieldOptions();
+      await askDataForCustomFieldsImporter(prompt);
+    }
   });
 
 program.parse();
 
 async function askUserInput(prompt, question) {
-  return await prompt([question]);
+  return await prompt(question);
+}
+
+async function askDataForCustomFieldsImporter(prompt) {
+  const jiraOptions = {};
+  const answers = await askUserInput(prompt, [
+    {
+      type: 'input',
+      name: 'jiraHost',
+      message: 'Please input your Jira host?',
+      validate: (data) => {
+        jiraOptions['jiraHost'] = data;
+        return data.length > 0;
+      },
+    },
+    {
+      type: 'input',
+      name: 'jiraUsername',
+      message: 'Please input your Jira username?',
+      validate: (data) => {
+        jiraOptions['jiraUsername'] = data;
+        return data.length > 0;
+      },
+    },
+    {
+      type: 'input',
+      name: 'jiraPassword',
+      message: 'Please input your Jira password or token?',
+      validate: async (data) => {
+        console.log('data in validate', data);
+        jiraOptions['jiraPassword'] = data;
+        return data.length > 0;
+      },
+    },
+    {
+      type: 'confirm',
+      name: 'askAgain',
+      message:
+        'Want to get Jira custom field key and custom field options again (just hit enter for YES)?',
+      default: false,
+    },
+  ]);
+  if (answers.askAgain) {
+    await askDataForCustomFieldsImporter(prompt);
+  }
+  return answers;
 }
